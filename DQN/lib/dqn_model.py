@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.autograd as autograd
+import torch.nn.functional as F
 
 
 
@@ -12,8 +13,8 @@ class NoisyLinearFunction(autograd.Function):
         output_features, input_features = weight.size()
 
         transform = lambda x : torch.sign(x) * torch.sqrt(torch.abs(x))
-        epsilon_input = transform(epsilon_input)
-        epsilon_output = transform(epsilon_output)
+        epsilon_input = transform(epsilon_input.data)
+        epsilon_output = transform(epsilon_output.data)
 
         epsilon_bias = epsilon_output
 
@@ -44,21 +45,19 @@ class NoisyLinearFunction(autograd.Function):
 
 
 class NoisyLinearLayer(nn.Module):
-    def __init__(self, input_features, output_features, sigma = 0.017):
+    def __init__(self, input_features, output_features, sigma = 0.5):
         super(NoisyLinearLayer, self).__init__()
-        self.input_features = input_features
-        self.output_features = output_features
 
-
+        sigma_init = sigma / np.sqrt(input_features)
         self.weight = nn.Parameter(torch.Tensor(output_features, input_features))
         self.bias = nn.Parameter(torch.Tensor(output_features))
-        self.sigma_weight = nn.Parameter(torch.full((output_features, input_features), sigma))
-        self.sigma_bias = nn.Parameter(torch.full((output_features,), sigma))
+        self.sigma_weight = nn.Parameter(torch.full((output_features, input_features), sigma_init))
+        self.sigma_bias = nn.Parameter(torch.full((output_features,), sigma_init))
 
         self.register_buffer("epsilon_input", torch.zeros(input_features))
         self.register_buffer("epsilon_output", torch.zeros(output_features))
 
-        std = np.sqrt(3 / input_features)
+        std = np.sqrt(1 / input_features)
         self.weight.data.uniform_(-std, std)
         self.bias.data.uniform_(-std, std)
     
@@ -66,7 +65,6 @@ class NoisyLinearLayer(nn.Module):
         self.epsilon_input.normal_()
         self.epsilon_output.normal_()
         return NoisyLinearFunction.apply(input, self.weight, self.bias, self.sigma_weight, self.sigma_bias, self.epsilon_input, self.epsilon_output)
-
 
 
 class DQNModel(nn.Module):

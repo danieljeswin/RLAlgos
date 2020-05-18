@@ -125,10 +125,11 @@ class NoisyDQN:
             state = next_state
 
     def run_test_episode(self):
-        state = self.env.reset()
-        total_reward = 0.0
-        self.env = gym.wrappers.Monitor(self.env, directory = self.env_name, force = True)
 
+        total_reward = 0.0
+        self.load_network()
+        self.env = gym.wrappers.Monitor(self.env, directory = self.env_name, force = True)
+        state = self.env.reset()
         c = collections.Counter()
         while True:
             start_ts = time.time()
@@ -138,6 +139,7 @@ class NoisyDQN:
             state_t = torch.tensor(state_t).to(self.device)
             q_vals = self.network(state_t).detach().cpu().numpy()[0]
             action = np.argmax(q_vals)
+            c[action] += 1
 
             next_state, reward, done, _ = self.env.step(action)
             total_reward += reward
@@ -166,4 +168,4 @@ class NoisyDQN:
 if __name__ == '__main__':
     env_name = 'PongNoFrameskip-v4'
     dqn = NoisyDQN(env_name)
-    dqn.train()
+    dqn.test()
