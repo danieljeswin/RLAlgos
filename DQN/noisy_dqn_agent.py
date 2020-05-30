@@ -20,6 +20,12 @@ class NoisyDQN:
         self.device = torch.device('cuda')
         self.env_name = env_name
 
+        torch.manual_seed(2)
+        np.random.seed(2)
+        self.env.seed(2)
+        self.env.action_space.seed(2)
+        self.env.observation_space.seed(2)
+
         self.replay_buffer_size = 10000
         self.replay_start_size = 10000
         self.update_interval = 1000
@@ -168,4 +174,4 @@ class NoisyDQN:
 if __name__ == '__main__':
     env_name = 'PongNoFrameskip-v4'
     dqn = NoisyDQN(env_name)
-    dqn.test()
+    dqn.train()

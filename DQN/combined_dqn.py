@@ -21,6 +21,13 @@ class CombinedDQNAgent:
         self.device = torch.device('cuda')
         self.rollout_length = 2
 
+        torch.manual_seed(2)
+        np.random.seed(2)
+        self.env.seed(2)
+        self.env.action_space.seed(2)
+        self.env.observation_space.seed(2)
+
+
         self.learning_rate = 1e-4
         self.gamma = 0.99
         self.batch_size = 32
@@ -103,7 +110,7 @@ class CombinedDQNAgent:
 
         while True:
             self.steps += 1
-            epsilon = max(self.epsilon_end, self.epsilon_start - self.steps / self.epsilon_period)
+            epsilon = max(self.epsilon_end, self.epsilon_start - self.steps * (self.epsilon_start - self.epsilon_end) / self.epsilon_period)
 
             action = self.get_action(state, epsilon)
             next_state, reward, done, _ = self.env.step(action)
