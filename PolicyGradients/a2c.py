@@ -81,7 +81,7 @@ class A2C:
         return rewards
 
     def train(self):
-        self.writer = SummaryWriter(comment = '-mya2c')
+        self.writer = SummaryWriter(comment = '-mya2c' + self.env_name)
         episode_num = 0
         state = self.env.reset()
         total_reward = 0.0
