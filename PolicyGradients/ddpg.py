@@ -81,7 +81,7 @@ class Actor(nn.Module):
     def forward(self, state):
         output = self.model(state)
         output = self.final_layer(output)
-        return 2 * output
+        return output
 
 class Critic(nn.Module):
     def __init__(self, n_states, n_actions):
@@ -216,7 +216,7 @@ class DDPG:
                 rewards = torch.tensor(rewards).to(self.device).view(-1, 1)
 
                 Q_vals = self.critic_network(states, actions)
-                next_state_actions = self.target_actor_network(next_states)
+                next_state_actions = self.target_actor_network(next_states).detach()
                 Q_targets = rewards + self.gamma * self.target_critic_network(next_states, next_state_actions) * (1 - terminals)
                 critic_loss = self.critic_loss_criterion(Q_vals, Q_targets)
                 self.critic_optimizer.zero_grad()
